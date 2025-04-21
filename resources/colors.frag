@@ -1,12 +1,11 @@
 #version 330 core
 out vec4 FragColor;
+uniform sampler2D texture_diffuse1;
+uniform sampler2D texture_specular1;    
 
 struct Material {
-    sampler2D diffuse;
-    sampler2D specular;    
     float shininess;
 }; 
-uniform sampler2D texture_diffuse1;
 
 struct Light {
     vec3 position;  
@@ -46,7 +45,7 @@ void main()
     vec3 viewDir = normalize(viewPos - FragPos);
     vec3 reflectDir = reflect(-lightDir, norm);  
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
-    vec3 specular = light.specular * spec * texture(material.specular, TexCoords).rgb;  
+    vec3 specular = light.specular * spec * texture(texture_specular1, TexCoords).rgb;  
     
     // spotlight (soft edges)
     float theta = dot(lightDir, normalize(-light.direction)); 
