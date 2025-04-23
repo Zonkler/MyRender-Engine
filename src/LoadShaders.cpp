@@ -3,11 +3,12 @@
 
 #include <glad/glad.h>
 #include <glm/glm.hpp>
-
 #include <string>
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <light.hpp>
+
 
 class Shader
 {
@@ -133,6 +134,30 @@ public:
     void setMat4(const std::string &name, const glm::mat4 &mat) const
     {
         glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, &mat[0][0]);
+    }
+
+    void setLight(const std::string& name, const Light& light) {
+        setInt(name + ".type", light.type);
+        
+        // Common properties
+        setVec3(name + ".ambient", light.ambient);
+        setVec3(name + ".diffuse", light.diffuse);
+        setVec3(name + ".specular", light.specular);
+        
+        // Type-specific properties
+        if (light.type == LIGHT_DIRECTIONAL || light.type == LIGHT_SPOT) {
+            setVec3(name + ".direction", light.direction);
+        }
+        if (light.type == LIGHT_POINT || light.type == LIGHT_SPOT) {
+            setVec3(name + ".position", light.position);
+            setFloat(name + ".constant", light.constant);
+            setFloat(name + ".linear", light.linear);
+            setFloat(name + ".quadratic", light.quadratic);
+        }
+        if (light.type == LIGHT_SPOT) {
+            setFloat(name + ".cutOff", light.cutOff);
+            setFloat(name + ".outerCutOff", light.outerCutOff);
+        }
     }
 
 private:
