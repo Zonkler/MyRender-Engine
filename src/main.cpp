@@ -95,6 +95,7 @@ int main()
     //shaders
     Model ourModel("../assets/backpack/backpack.obj");
     //Model ourModel("../assets/teapot/teapot.obj");
+    //glEnable(GL_FRAMEBUFFER_SRGB);
 
     // render loop
     // -----------
@@ -153,6 +154,8 @@ int main()
         model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
         model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
         lightingShader.setMat4("model", model);
+        //glPolygonMode(GL_FRONT, GL_LINE);
+        //glPolygonMode(GL_BACK, GL_LINE);
         ourModel.Draw(lightingShader);
 
 
