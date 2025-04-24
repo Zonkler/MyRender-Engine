@@ -47,7 +47,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
-
+void RenderScene(Shader& shader, Model& teapot,Model& floor);
 // settings
 const unsigned int SCR_WIDTH = 1920;
 const unsigned int SCR_HEIGHT = 1080;
@@ -66,7 +66,31 @@ float lastFrame = 0.0f;
 glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 
 
+void renderQuad()
+{
+        GLuint quadVAO,quadVBO;
+        float quadVertices[] = {
+            // positions        // texture Coords
+            -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+            -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+             1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
+             1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+        };
+        // setup plane VAO
+        glGenVertexArrays(1, &quadVAO);
+        glGenBuffers(1, &quadVBO);
+        glBindVertexArray(quadVAO);
+        glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 
+    glBindVertexArray(quadVAO);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    glBindVertexArray(0);
+}
 
 int main()
 {
@@ -114,6 +138,8 @@ int main()
     // build and compile our shader zprogram
     // ------------------------------------
     Shader lightingShader("../resources/colors.vert", "../resources/colors.frag");
+    Shader simpleDepthShader("../resources/model.vert","../resources/model.frag");
+    Shader debugDepthQuad("../resources/debug.vert", "../resources/debug.frag");
     //Shader lightingShader("../resources/model.vert", "../resources/model.frag");
 
     //Shader lightCubeShader("../resources/light_cube.vert", "../resources/light_cube.frag");
@@ -149,6 +175,10 @@ int main()
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        // shader configuration
+    // --------------------
+    debugDepthQuad.use();
+    debugDepthQuad.setInt("depthMap", 0);
 
 
 
@@ -170,6 +200,45 @@ int main()
         // ------
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        float near_plane = 0.2f, far_plane = 10.5f;
+        glm::mat4 lightProjection = glm::ortho(-10.0f,10.0f,-10.0f,10.0f,near_plane,far_plane);
+        glm::mat4 lightView = glm::lookAt(greenPointLight.position,
+                                            glm::vec3( 0.0f, 0.0f, 0.0f),
+                                            glm::vec3( 0.0f, 1.0f, 0.0f));
+        glm::mat4 lightSpaceMatrix = lightProjection * lightView;
+        simpleDepthShader.use();
+        simpleDepthShader.setMat4("lightSpaceMatrix",lightSpaceMatrix);
+        glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+        glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+        glClear(GL_DEPTH_BUFFER_BIT);
+        RenderScene(simpleDepthShader,ourModel,plane);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+                // reset viewport
+        glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        
+        // render Depth map to quad for visual debugging
+        // ---------------------------------------------
+        debugDepthQuad.use();
+        debugDepthQuad.setFloat("near_plane", near_plane);
+        debugDepthQuad.setFloat("far_plane", far_plane);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, depthMap);
+        renderQuad();
+
+
+
+        
+
+
+
+
+
+
+
+
         // In your render loop, before drawing:
         lightingShader.use();
 
@@ -202,20 +271,6 @@ int main()
         lightingShader.setMat4("projection", projection);
         lightingShader.setMat4("view", view);
 
-        // Draw model
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(1.0f));
-        lightingShader.setMat4("model", model);
-        // For non-textured models (like teapot):
-        lightingShader.setVec3("material.diffuseColor", 0.8f, 0.8f, 0.8f);  // Solid white
-        lightingShader.setVec3("material.specularColor", 1.0f, 1.0f, 1.0f); // Bright highlights
-        lightingShader.setFloat("material.shininess", 64.0f);
-        ourModel.Draw(lightingShader);
-
-        model = glm::scale(model, glm::vec3(4.0f));
-        lightingShader.setMat4("model", model);
-        plane.Draw(lightingShader);
 
         //std::cout<<camera.Positio n.x<<" "<<camera.Position.y<<" "<<camera.Position.z<<'\n';
 
@@ -293,7 +348,24 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 }
 
 
+void RenderScene(Shader& shader, Model& teapot,Model& floor)
+{        // Draw model
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
+    model = glm::scale(model, glm::vec3(1.0f));
+    shader.setMat4("model", model);
+    // For non-textured models (like teapot):
+    shader.setVec3("material.diffuseColor", 0.8f, 0.8f, 0.8f);  // Solid white
+    shader.setVec3("material.specularColor", 1.0f, 1.0f, 1.0f); // Bright highlights
+    shader.setFloat("material.shininess", 64.0f);
+    teapot.Draw(shader);
 
+    model = glm::scale(model, glm::vec3(4.0f));
+    shader.setMat4("model", model);
+    floor.Draw(shader);
+
+
+}
 // utility function for loading a 2D texture from file
 // ---------------------------------------------------
 unsigned int loadTexture(char const * path)
