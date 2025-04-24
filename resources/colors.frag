@@ -32,24 +32,47 @@ struct Light {
     float outerCutOff;
 };
 
-in vec3 FragPos;
-in vec3 Normal;
-in vec2 TexCoords;
+//in vec3 FragPos;
+//in vec3 Normal;
+//in vec2 TexCoords;
+
+
+in VS_OUT {
+    vec3 FragPos;
+    vec3 Normal;
+    vec2 TexCoords;
+    vec4 FragPosLightSpace;
+} fs_in;
+
+uniform sampler2D shadowMap;
 
 uniform vec3 viewPos;
 uniform Material material;
 uniform Light lights[4];
 uniform int numLights;
 
+float ShadowCalculation(vec4 fragPosLightSpace, vec3 lightDir)
+{
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    projCoords = projCoords * 0.5 + 0.5;
+    float closestDepth = texture(shadowMap, projCoords.xy).r;
+
+    float currentDepth = projCoords.z;
+
+    float bias = max(0.05 * (1.0 - dot(fs_in.Normal, lightDir)), 0.005);
+    float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;
+    return shadow;
+}
+
 vec3 CalculateLight(Light light, Material material, vec3 normal, vec3 fragPos, vec3 viewDir)
 {
     // Determine colors based on texture mode
     vec3 diffuseColor = material.useTextures ? 
-        texture(material.texture_diffuse1, TexCoords).rgb : 
+        texture(material.texture_diffuse1, fs_in.TexCoords).rgb : 
         material.diffuseColor;
     
     vec3 specularColor = material.useTextures ? 
-        texture(material.texture_specular1, TexCoords).rgb : 
+        texture(material.texture_specular1, fs_in.TexCoords).rgb : 
         material.specularColor;
 
     vec3 lightDir;
@@ -85,19 +108,21 @@ vec3 CalculateLight(Light light, Material material, vec3 normal, vec3 fragPos, v
     vec3 diffuse = light.diffuse * diff * diffuseColor;
     vec3 specular = light.specular * spec * specularColor;
     
-    return (ambient + (diffuse + specular) * intensity) * attenuation;
+    float shadow = ShadowCalculation(fs_in.FragPosLightSpace,lightDir);
+
+    return (ambient + (1.0 - shadow) * (diffuse + specular)) * attenuation * intensity;
 }
 
 void main()
 {
     // Common calculations
-    vec3 norm = normalize(Normal);
-    vec3 viewDir = normalize(viewPos - FragPos);
+    vec3 norm = normalize(fs_in.Normal);
+    vec3 viewDir = normalize(viewPos - fs_in.FragPos);
     vec3 result = vec3(0.0);
 
     // Accumulate light contributions
     for(int i = 0; i < numLights; i++) {
-        result += CalculateLight(lights[i], material, norm, FragPos, viewDir);
+        result += CalculateLight(lights[i], material, norm, fs_in.FragPos, viewDir);
     }
 
     // Gamma correction
