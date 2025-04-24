@@ -15,31 +15,45 @@
 #include <model.hpp>
 #include <iostream>
 
-
-Light greenPointLight{
+Light purpleLight{
     .type = LIGHT_POINT,
-    .position = glm::vec3(1.85724f, 0.875508f, 1.70584f),  // Position it to the right
-    .ambient = glm::vec3(0.05f, 0.1f, 0.05f),  // Dark green ambient
-    .diffuse = glm::vec3(0.3f, 1.0f, 0.3f),    // Bright green diffuse
-    .specular = glm::vec3(0.4f, 1.0f, 0.4f),   // Green-tinted specular
+    .position = glm::vec3(-5.70244f, 4.13403f, 6.41498f),
+    // More subtle ambient (10% of diffuse)
+    .ambient = glm::vec3(0.066f, 0.019f, 0.075f),  
+    // Rich purple (RGB: 66% red, 19% green, 75% blue)
+    .diffuse = glm::vec3(0.66f, 0.19f, 0.75f),    
+    // Slightly brighter purple for specular
+    .specular = glm::vec3(0.8f, 0.3f, 0.9f),      
     .constant = 1.0f,
     .linear = 0.09f,
     .quadratic = 0.032f
 };
 
+Light greenPointLight{
+    .type = LIGHT_POINT,
+    .position = glm::vec3(1.85724f, 0.875508f, 1.70584f),
+    // Darker green ambient (10% of diffuse)
+    .ambient = glm::vec3(0.03f, 0.1f, 0.03f),  
+    // Vibrant green (RGB: 30% red, 100% green, 30% blue)
+    .diffuse = glm::vec3(0.3f, 1.0f, 0.3f),    
+    // Brighter green for specular highlights
+    .specular = glm::vec3(0.5f, 1.2f, 0.5f),   
+    .constant = 1.0f,
+    .linear = 0.07f,  // Slightly less attenuation
+    .quadratic = 0.017f
+};
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
-unsigned int loadTexture(char const * path);
 
 // settings
 const unsigned int SCR_WIDTH = 1920;
 const unsigned int SCR_HEIGHT = 1080;
 
 // camera
-Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+Camera camera(glm::vec3(0.0f, 3.0f, 6.0f));
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -106,7 +120,9 @@ int main()
 
 
     //shaders
-    Model ourModel("../assets/backpack/backpack.obj");
+    Model ourModel("../assets/teapot/teapot.obj");
+    Model plane("../assets/woodplane/woodplane.obj");
+
     //Model ourModel("../assets/teapot/teapot.obj");
     //glEnable(GL_FRAMEBUFFER_SRGB);
 
@@ -178,7 +194,7 @@ int main()
         playerSpotlight.quadratic = 0.032f;
         playerSpotlight.cutOff = glm::cos(glm::radians(12.5f));
         playerSpotlight.outerCutOff = glm::cos(glm::radians(17.5f));
-        lightingShader.setLight("lights[0]", playerSpotlight);
+        lightingShader.setLight("lights[0]", purpleLight);
         lightingShader.setLight("lights[1]",greenPointLight);
         // View/projection matrices
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
@@ -191,16 +207,24 @@ int main()
         model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
         model = glm::scale(model, glm::vec3(1.0f));
         lightingShader.setMat4("model", model);
+        // For non-textured models (like teapot):
+        lightingShader.setVec3("material.diffuseColor", 0.8f, 0.8f, 0.8f);  // Solid white
+        lightingShader.setVec3("material.specularColor", 1.0f, 1.0f, 1.0f); // Bright highlights
+        lightingShader.setFloat("material.shininess", 64.0f);
         ourModel.Draw(lightingShader);
 
-        //std::cout<<camera.Position.x<<" "<<camera.Position.y<<" "<<camera.Position.z<<'\n';
+        model = glm::scale(model, glm::vec3(4.0f));
+        lightingShader.setMat4("model", model);
+        plane.Draw(lightingShader);
+
+        //std::cout<<camera.Positio n.x<<" "<<camera.Position.y<<" "<<camera.Position.z<<'\n';
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-
+//-5.70244 4.13403 6.41498
     // optional: de-allocate all resources once they've outlived their purpose:
     // ------------------------------------------------------------------------
 
