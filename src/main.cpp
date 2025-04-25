@@ -141,6 +141,9 @@
         // ------------------------------------
         Shader lightingShader("../resources/colors.vert", "../resources/colors.frag");
         Shader simpleDepthShader("../resources/model.vert","../resources/model.frag");
+        Shader pointshadowshader("../resources/shadow_mappin/point_shadow.vert", "../resources/shadow_mappin/point_shadow.frag","../resources/shadow_mappin/point_shadow.geom");
+
+
         Shader debugDepthQuad("../resources/debug.vert", "../resources/debug.frag");
         //Shader lightingShader("../resources/model.vert", "../resources/model.frag");
 
@@ -240,11 +243,6 @@
     
 
 
-
-
-
-            glActiveTexture(GL_TEXTURE2);
-            glBindTexture(GL_TEXTURE_2D, depthMap);
 
             // Your existing code:
 
