@@ -4,12 +4,12 @@
 
 
 
-#include <glad/glad.h> // holds all OpenGL type declarations
+#include <glad/glad.h> 
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include <../src/LoadShaders.cpp>
+#include <LoadShaders.hpp>
 
 #include <string>
 #include <vector>

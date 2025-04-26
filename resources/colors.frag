@@ -71,29 +71,34 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 lightDir)
     
     return shadow;
 }
-float ShadowCalculation_Pointlight(vec3 fragPos, Light light) {
+float ShadowCalculation_Pointlight(vec3 fragPos, Light light, vec3 normal)
+{
     vec3 fragToLight = fragPos - light.position;
     float currentDepth = length(fragToLight);
-    float shadow=0.0;
-    float bias = 0.15;
+    vec3 lightDir = normalize(fragToLight);
+    
+    // 1. Dynamic bias based on surface angle
+    float bias = max(0.15 * (1.0 - dot(normal, lightDir)), 0.05);
+    
+    // 2. Distance-aware sampling radius
+    float diskRadius = (0.8 + (currentDepth / far_plane)) / 30.0;
+    
+    float shadow = 0.0;
     int samples = 20;
-    float viewDistance = length(viewPos - fragPos);
-    float diskRadius = (1.0 + (viewDistance / far_plane)) / 25.0;
-
-    for(int i = 0; i < samples; ++i)
-    {
-        float closestDepth = texture(depthMap, fragToLight + gridSamplingDisk[i] * diskRadius).r;
-        closestDepth *= far_plane;   // undo mapping [0;1]
-        if(currentDepth - bias > closestDepth)
-            shadow += 1.0;
+    
+    for(int i = 0; i < samples; ++i) {
+        vec3 sampleOffset = gridSamplingDisk[i] * diskRadius;
+        float closestDepth = texture(depthMap, fragToLight + sampleOffset).r;
+        closestDepth *= far_plane; // Undo normalization
+        
+        // 3. Soft comparison with bias
+        shadow += (currentDepth - bias > closestDepth) ? 1.0 : 0.0;
     }
     shadow /= float(samples);
-        
-    // display closestDepth as debug (to visualize depth cubemap)
-    // FragColor = vec4(vec3(closestDepth / far_plane), 1.0);    
-        
-    return shadow;
+    
+    return shadow; // Account for cube map filtering
 }
+
 
 vec3 CalculateLight(Light light, Material material, vec3 normal, vec3 fragPos, vec3 viewDir)
 {
@@ -140,7 +145,7 @@ vec3 CalculateLight(Light light, Material material, vec3 normal, vec3 fragPos, v
     vec3 specular = light.specular * spec * specularColor;
     
     float shadow;
-    if(light.type == LIGHT_POINT){shadow = ShadowCalculation_Pointlight(fragPos,light); }
+    if(light.type == LIGHT_POINT){shadow = ShadowCalculation_Pointlight(fragPos,light,fs_in.Normal); }
     else{ shadow= ShadowCalculation(fs_in.FragPosLightSpace,lightDir);}
 
     return (ambient + (1.0 - shadow) * (diffuse + specular)) * attenuation * intensity;
