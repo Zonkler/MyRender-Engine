@@ -32,9 +32,6 @@ struct Light {
     float outerCutOff;
 };
 
-//in vec3 FragPos;
-//in vec3 Normal;
-//in vec2 TexCoords;
 
 
 in VS_OUT {
@@ -50,6 +47,8 @@ uniform vec3 viewPos;
 uniform Material material;
 uniform Light lights[4];
 uniform int numLights;
+uniform float far_plane;
+uniform samplerCube depthMap;
 
 float ShadowCalculation(vec4 fragPosLightSpace, vec3 lightDir)
 {
@@ -61,7 +60,17 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 lightDir)
 
     float bias = max(0.05 * (1.0 - dot(fs_in.Normal, lightDir)), 0.005);
     float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;
+    
     return shadow;
+}
+float ShadowCalculation_Pointlight(vec3 fragPos, Light light) {
+    vec3 fragToLight = fragPos - light.position;
+    float closestDepth = texture(depthMap, fragToLight).r;
+    closestDepth *= far_plane;
+    float currentDepth = length(fragToLight);
+    float bias = max(0.05 * (1.0 - dot(normalize(fs_in.Normal), 
+                     normalize(fragToLight))), 0.005);
+    return currentDepth - bias > closestDepth ? 1.0 : 0.0;
 }
 
 vec3 CalculateLight(Light light, Material material, vec3 normal, vec3 fragPos, vec3 viewDir)
@@ -108,7 +117,9 @@ vec3 CalculateLight(Light light, Material material, vec3 normal, vec3 fragPos, v
     vec3 diffuse = light.diffuse * diff * diffuseColor;
     vec3 specular = light.specular * spec * specularColor;
     
-    float shadow = ShadowCalculation(fs_in.FragPosLightSpace,lightDir);
+    float shadow;
+    if(light.type == LIGHT_POINT){shadow = ShadowCalculation_Pointlight(fragPos,light); }
+    else{ shadow= ShadowCalculation(fs_in.FragPosLightSpace,lightDir);}
 
     return (ambient + (1.0 - shadow) * (diffuse + specular)) * attenuation * intensity;
 }
