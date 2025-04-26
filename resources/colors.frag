@@ -32,7 +32,15 @@ struct Light {
     float outerCutOff;
 };
 
-
+// array of offset direction for sampling
+vec3 gridSamplingDisk[20] = vec3[]
+(
+   vec3(1, 1,  1), vec3( 1, -1,  1), vec3(-1, -1,  1), vec3(-1, 1,  1), 
+   vec3(1, 1, -1), vec3( 1, -1, -1), vec3(-1, -1, -1), vec3(-1, 1, -1),
+   vec3(1, 1,  0), vec3( 1, -1,  0), vec3(-1, -1,  0), vec3(-1, 1,  0),
+   vec3(1, 0,  1), vec3(-1,  0,  1), vec3( 1,  0, -1), vec3(-1, 0, -1),
+   vec3(0, 1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0, 1, -1)
+);
 
 in VS_OUT {
     vec3 FragPos;
@@ -65,12 +73,26 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 lightDir)
 }
 float ShadowCalculation_Pointlight(vec3 fragPos, Light light) {
     vec3 fragToLight = fragPos - light.position;
-    float closestDepth = texture(depthMap, fragToLight).r;
-    closestDepth *= far_plane;
     float currentDepth = length(fragToLight);
-    float bias = max(0.05 * (1.0 - dot(normalize(fs_in.Normal), 
-                     normalize(fragToLight))), 0.005);
-    return currentDepth - bias > closestDepth ? 1.0 : 0.0;
+    float shadow=0.0;
+    float bias = 0.15;
+    int samples = 20;
+    float viewDistance = length(viewPos - fragPos);
+    float diskRadius = (1.0 + (viewDistance / far_plane)) / 25.0;
+
+    for(int i = 0; i < samples; ++i)
+    {
+        float closestDepth = texture(depthMap, fragToLight + gridSamplingDisk[i] * diskRadius).r;
+        closestDepth *= far_plane;   // undo mapping [0;1]
+        if(currentDepth - bias > closestDepth)
+            shadow += 1.0;
+    }
+    shadow /= float(samples);
+        
+    // display closestDepth as debug (to visualize depth cubemap)
+    // FragColor = vec4(vec3(closestDepth / far_plane), 1.0);    
+        
+    return shadow;
 }
 
 vec3 CalculateLight(Light light, Material material, vec3 normal, vec3 fragPos, vec3 viewDir)

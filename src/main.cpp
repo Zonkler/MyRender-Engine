@@ -17,19 +17,6 @@
     #include <model.hpp>
     #include <iostream>
     bool unlocked_cursor=false;
-    Light purpleLight{
-        .type = LIGHT_POINT,
-        .position = glm::vec3(-5.70244f, 4.13403f, 6.41498f),
-        // More subtle ambient (10% of diffuse)
-        .ambient = glm::vec3(0.1f, 0.1f, 0.03f),  
-        // Rich purple (RGB: 66% red, 19% green, 75% blue)
-        .diffuse = glm::vec3(1.0f, 1.0f, 0.3f),    
-        // Slightly brighter purple for specular
-        .specular = glm::vec3(1.2f, 1.2f, 0.5f),      
-        .constant = 1.0f,
-        .linear = 0.09f,
-        .quadratic = 0.032f
-    };
 
     Light greenPointLight{
         .type = LIGHT_POINT,
@@ -65,7 +52,6 @@
     float lastFrame = 0.0f;
 
     // lighting
-    glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 
 
     void renderQuad()
@@ -188,6 +174,7 @@
 
                 // SHADOW MAPPING POINT LIGHTS EXPERIEMENTING
                 glActiveTexture(GL_TEXTURE3);
+                const unsigned int SHADOW_WIDTH2 = 1024, SHADOW_HEIGHT2 = 1024;
 
                 unsigned int depthCubemap,depthMapFBOpointlight;
                 glGenFramebuffers(1, &depthMapFBOpointlight); // ✅ Missing this line!
@@ -198,7 +185,7 @@
                 glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
                 for (unsigned int i = 0; i < 6; ++i){
                 glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT32F,
-                SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT,
+                SHADOW_WIDTH2, SHADOW_HEIGHT2, 0, GL_DEPTH_COMPONENT,
                 GL_FLOAT, NULL);}
                 glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
                 glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -260,7 +247,7 @@
 
             float near_plane2 = 1.0f;
             float far_plane2  = 1000.0f;
-            glm::mat4 shadowProj = glm::perspective(glm::radians(90.0f), (float)SHADOW_WIDTH / (float)SHADOW_HEIGHT, near_plane2, far_plane2);
+            glm::mat4 shadowProj = glm::perspective(glm::radians(90.0f), (float)SHADOW_WIDTH2 / (float)SHADOW_HEIGHT2, near_plane2, far_plane2);
             std::vector<glm::mat4> shadowTransforms = {
                 shadowProj * glm::lookAt(greenPointLight.position, greenPointLight.position + glm::vec3(1,0,0),  glm::vec3(0,-1,0)),  // +X
                 shadowProj * glm::lookAt(greenPointLight.position, greenPointLight.position + glm::vec3(-1,0,0), glm::vec3(0,-1,0)),  // -X
@@ -272,11 +259,12 @@
 
                     // 1. render scene to depth cubemap
         // --------------------------------
-            glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+            glViewport(0, 0, SHADOW_WIDTH2, SHADOW_HEIGHT2);
             
             glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBOpointlight);
                 glClear(GL_DEPTH_BUFFER_BIT);
                 pointshadowshader.use();
+                pointshadowshader.setFloat("far_plane", far_plane2);
 
                 for (unsigned int i = 0; i < 6; ++i)
                 pointshadowshader.setMat4("shadowMatrices[" + std::to_string(i) + "]", shadowTransforms[i]);
@@ -485,14 +473,22 @@
         // Teapot (should use textures)
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(0.7f));
+        model = glm::scale(model, glm::vec3(0.4f));
         shader.setMat4("model", model);
         shader.setBool("material.useTextures", true);  // Critical fix
         teapot.Draw(shader);
 
+                // Teapot (should use textures)
+                model = glm::mat4(1.0f);
+                model = glm::translate(model, glm::vec3(-6.0f, 0.0f, 0.0f));
+                model = glm::scale(model, glm::vec3(0.4f));
+                shader.setMat4("model", model);
+                shader.setBool("material.useTextures", true);  // Critical fix
+                teapot.Draw(shader);
+
         // Floor (using colored material)
         model = glm::mat4(1.0f);
-        model = glm::scale(model, glm::vec3(4.0f));
+        model = glm::scale(model, glm::vec3(10.0f));
         shader.setMat4("model", model);
         shader.setBool("material.useTextures", false); // Use color properties
         shader.setVec3("material.diffuseColor", 0.8f, 0.8f, 0.8f);
