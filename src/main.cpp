@@ -26,13 +26,18 @@
 #include <model.hpp>
 #include <shadowmapper.hpp>
 #include "LoadShaders.hpp"
+#include "Physics_Component/physics.hpp"
 
 /*--------------- Standard library ---------------*/
 #include <iostream>
 #include <memory> // for smart pointers
 
 
+const glm::vec3 gravity(0.0f, -9.81f, 0.0f);
+
 bool unlocked_cursor=false;
+
+
 
 Light greenPointLight{
     .type = LIGHT_POINT,
@@ -52,7 +57,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
-void RenderScene(Shader& shader, Model& teapot,Model& floor);
+void RenderScene(Shader& shader, Model& teapot,Model& floor, glm::mat4 model);
 // settings
 const unsigned int SCR_WIDTH = 1920;
 const unsigned int SCR_HEIGHT = 1080;
@@ -141,6 +146,25 @@ int main()
     
     glEnable(GL_MULTISAMPLE); // Enable MSAA globally
 
+
+
+    /*-------- Physics --------*/
+
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(0.0f, 25.0f, 0.0f));
+    model = glm::scale(model, glm::vec3(0.4f));
+
+
+    glm::vec3 initialPos = glm::vec3(model[3]); // Extract translation
+
+    // Initialize a particle with initial conditions
+    Particle teapot(initialPos,  // Initial position (10 units above ground)
+                    glm::vec3(0.0f, 0.0f, 0.0f),  // Initial velocity (no initial movement)
+                    glm::vec3(0.0f, 0.0f, 0.0f),  // Initial acceleration (no initial forces)
+                    290.0f,  // Mass of the particle (1 kg)
+                    0.99f); // Damping factor
+
+
     /*-------- Main render loop --------*/
     while (!glfwWindowShouldClose(window))
     {
@@ -162,8 +186,17 @@ int main()
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
+        teapot.forceAccum += gravity * teapot.mass;
+        teapot.integrate(deltaTime);
 
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, teapot.position);
+        model = glm::scale(model, glm::vec3(0.4f));
 
+        if (teapot.position.y < 0.4f) { // Teapot radius approximation
+            teapot.position.y = 0.4f;
+            teapot.velocity.y = -teapot.velocity.y * 0.8f; // Bounce with energy loss
+        }
 
 
 
@@ -176,7 +209,7 @@ int main()
         for (int i = 0; i < 6; ++i) {
             pointshadowshader.setMat4("shadowMatrices[" + std::to_string(i) + "]",pointLightShadow.getShadowMatrices()[i]);
         }
-        RenderScene(pointshadowshader, ourModel, plane);
+        RenderScene(pointshadowshader, ourModel, plane, model);
         pointLightShadow.endRender();
 
 
@@ -215,7 +248,7 @@ int main()
         lightingShader.setMat4("view", view);
 
         lightingShader.setInt("depthMap",3);
-        RenderScene(lightingShader,ourModel,plane);
+        RenderScene(lightingShader,ourModel,plane,model);
 
 
 
@@ -323,28 +356,19 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 }
 
 
-void RenderScene(Shader& shader, Model& teapot, Model& floor)
+void RenderScene(Shader& shader, Model& teapot, Model& floor, glm::mat4 model)
 {
     // Teapot (should use textures)
-    glm::mat4 model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
-    model = glm::scale(model, glm::vec3(0.4f));
+
     shader.setMat4("model", model);
     shader.setBool("material.useTextures", true);  // Critical fix
     teapot.Draw(shader);
 
-            // Teapot (should use textures)
-            model = glm::mat4(1.0f);
-            model = glm::translate(model, glm::vec3(-6.0f, 0.0f, 0.0f));
-            model = glm::scale(model, glm::vec3(0.4f));
-            shader.setMat4("model", model);
-            shader.setBool("material.useTextures", true);  // Critical fix
-            teapot.Draw(shader);
 
     // Floor (using colored material)
-    model = glm::mat4(1.0f);
-    model = glm::scale(model, glm::vec3(10.0f));
-    shader.setMat4("model", model);
+    glm::mat4 model2 = glm::mat4(1.0f);
+     model2 = glm::scale(model2, glm::vec3(10.0f));
+    shader.setMat4("model", model2);
     shader.setBool("material.useTextures", false); // Use color properties
     shader.setVec3("material.diffuseColor", 0.8f, 0.8f, 0.8f);
     shader.setVec3("material.specularColor", 1.0f, 1.0f, 1.0f);
