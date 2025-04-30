@@ -69,6 +69,9 @@ target_include_directories(ImGuiFileDialog PUBLIC
 )
 target_link_libraries(ImGuiFileDialog PRIVATE imgui)
 
+# enable experimental GLM functions globally
+add_definitions(-DGLM_ENABLE_EXPERIMENTAL)
+
 # Single target_link_libraries call at the end
 target_link_libraries("${CMAKE_PROJECT_NAME}" PRIVATE 
     glm 
