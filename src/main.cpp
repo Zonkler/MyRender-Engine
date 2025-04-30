@@ -27,6 +27,7 @@
 #include <shadowmapper.hpp>
 #include "LoadShaders.hpp"
 #include "Physics_Component/physics.hpp"
+#include "Interface/UserInterface.hpp"
 
 /*--------------- Standard library ---------------*/
 #include <iostream>
@@ -137,21 +138,36 @@ int main()
     dirShadow.setFarPlane(50.5f);
     
     /*-------- Load custom models --------*/
+    ModelAndInstanceData mymodelinstance;
     
+    mymodelinstance.miModelAddCallbackFunction = [&](std::string modelPath) -> bool {
+        AssimpModel newModel;
+        if (!newModel.loadModel(modelPath)) {
+            return false;
+        }
+        mymodelinstance.miModelList.push_back(std::make_shared<AssimpModel>(newModel));
+        return true;
+    };
+
+
     AssimpModel myModel;
     myModel.loadModel("../assets/woman/Woman.gltf");
-  
-    
-    /*-------- Enable IMGUI --------*/
+    OGLRenderData renderdata;
+    renderdata.rdWindow=window;
+    UserInterface myInterface;
+    myInterface.init(renderdata);
+/*
+
+   // -------- Enable IMGUI --------
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void) io;
     ImGui::StyleColorsDark();
     ImGui_ImplGlfw_InitForOpenGL(window,true);
     ImGui_ImplOpenGL3_Init("#version 330");
-    
-    glEnable(GL_MULTISAMPLE); // Enable MSAA globally
+*/
 
+    glEnable(GL_MULTISAMPLE); // Enable MSAA globally
 
 
     /*-------- Physics --------*/
@@ -188,9 +204,10 @@ int main()
         // ------
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
+        
+        //ImGui_ImplOpenGL3_NewFrame();
+        //ImGui_ImplGlfw_NewFrame();
+        //ImGui::NewFrame();
 
         teapot.forceAccum += gravity * teapot.mass;
         teapot.integrate(deltaTime);
@@ -265,10 +282,11 @@ lightingShader.setFloat("material.shininess", 32.0f);*/
         lightingShader.setMat4("projection", projection);
         lightingShader.setMat4("view", view);
         lightingShader.setMat4("model", model); // Add this line to apply physics transformation
+        lightingShader.setBool("material.useTextures",true);
         lightingShader.setInt("material.texture_diffuse1", 7);
 
         myModel.draw();
-
+        /*
         ImGui::Begin("Render engine config");
         ImGui::Text("hi");
         ImGui::SliderFloat("Light X position",&greenPointLight.position.x,-20.0f,20.0f);
@@ -282,7 +300,7 @@ lightingShader.setFloat("material.shininess", 32.0f);*/
             config.flags = ImGuiFileDialogFlags_Modal;
 
             ImGuiFileDialog::Instance()->OpenDialog(
-                "ChooseModelFile", "Choose Model File", ".*",
+                "ChooseModelFile", "Choose Model File", "Pictures{.jpg,.png},Models{.gltf,.glb},All Files{.*}",
                 config);
                 
         }
@@ -290,11 +308,12 @@ lightingShader.setFloat("material.shininess", 32.0f);*/
         if (ImGuiFileDialog::Instance()->Display("ChooseModelFile")) 
         {
             if (ImGuiFileDialog::Instance()->IsOk()) 
-            {
+            {   
                 std::string filePath = ImGuiFileDialog::Instance()->GetFilePathName();
                 std::cout << "Selected file: " << filePath << std::endl;
                 // Load your model here:
                 // yourModel.Load(filePath);
+                
             }
             ImGuiFileDialog::Instance()->Close();
         }
@@ -304,6 +323,12 @@ lightingShader.setFloat("material.shininess", 32.0f);*/
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        */
+
+
+        myInterface.createFrame(renderdata,mymodelinstance);
+        myInterface.render();
+
 
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
