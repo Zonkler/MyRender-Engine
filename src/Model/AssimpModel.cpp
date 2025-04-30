@@ -59,7 +59,7 @@ bool AssimpModel::loadModel(std::string modelFilename, unsigned int extraImportF
 
   /* add a white texture in case there is no diffuse tex but colors */
   mWhiteTexture = std::make_shared<Texture>();
-  std::string whiteTexName = "textures/white.png";
+  std::string whiteTexName = "C:/Users/xrhstos/Desktop/RenderEngine/assets/textures/white.png";
   if (!mWhiteTexture->loadTexture(whiteTexName)) {
     Logger::log(1, "%s error: could not load white default texture '%s'\n", __FUNCTION__, whiteTexName.c_str());
     return false;
@@ -67,7 +67,7 @@ bool AssimpModel::loadModel(std::string modelFilename, unsigned int extraImportF
 
   /* add a placeholder texture in case there is no diffuse tex */
   mPlaceholderTexture = std::make_shared<Texture>();
-  std::string placeholderTexName = "textures/missing_tex.png";
+  std::string placeholderTexName = "C:/Users/xrhstos/Desktop/RenderEngine/assets/textures/missing_tex.png";
   if (!mPlaceholderTexture->loadTexture(placeholderTexName)) {
     Logger::log(1, "%s error: could not load placeholder texture '%s'\n", __FUNCTION__, placeholderTexName.c_str());
     return false;
@@ -205,7 +205,7 @@ void AssimpModel::draw() {
       }
     }
 
-    glActiveTexture(GL_TEXTURE0);
+    glActiveTexture(GL_TEXTURE7);
     if (diffuseTex) {
       diffuseTex->bind();
     } else {

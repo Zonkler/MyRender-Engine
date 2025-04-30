@@ -23,7 +23,7 @@
 
 /*--------------- My classes/files ---------------*/
 #include <camera.hpp>
-#include <model.hpp>
+#include "Model/AssimpModel.hpp"
 #include <shadowmapper.hpp>
 #include "LoadShaders.hpp"
 #include "Physics_Component/physics.hpp"
@@ -60,7 +60,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
-void RenderScene(Shader& shader, Model& teapot,Model& floor, glm::mat4 model);
+//void RenderScene(Shader& shader, Model& teapot,Model& floor, glm::mat4 model);
 // settings
 const unsigned int SCR_WIDTH = 1920;
 const unsigned int SCR_HEIGHT = 1080;
@@ -124,6 +124,7 @@ int main()
     stbi_set_flip_vertically_on_load(true);
 
     /*-------- Build and compile the shaders --------*/
+    
     Shader lightingShader("../resources/colors.vert", "../resources/colors.frag");
     Shader simpleDepthShader("../resources/model.vert","../resources/model.frag");
     Shader pointshadowshader("../resources/shadow_mappin/depth_shaders/depth_shader.vert","../resources/shadow_mappin/depth_shaders/depth_shader.frag","../resources/shadow_mappin/depth_shaders/depth_shader.geom");
@@ -136,9 +137,11 @@ int main()
     dirShadow.setFarPlane(50.5f);
     
     /*-------- Load custom models --------*/
-    Model ourModel("../assets/teapot/teapot.obj");
-    Model plane("../assets/woodplane/woodplane.obj");
-
+    
+    AssimpModel myModel;
+    myModel.loadModel("../assets/woman/Woman.gltf");
+  
+    
     /*-------- Enable IMGUI --------*/
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -212,7 +215,7 @@ int main()
         for (int i = 0; i < 6; ++i) {
             pointshadowshader.setMat4("shadowMatrices[" + std::to_string(i) + "]",pointLightShadow.getShadowMatrices()[i]);
         }
-        RenderScene(pointshadowshader, ourModel, plane, model);
+        //RenderScene(pointshadowshader, ourModel, plane, model);
         pointLightShadow.endRender();
 
 
@@ -237,9 +240,10 @@ int main()
 
         // Set up lights
         lightingShader.setInt("numLights", 1); // Using 2 lights: directional + spotlight
-
+        /*
         lightingShader.setInt("material.texture_diffuse1", 0);
         lightingShader.setInt("material.texture_specular1", 1);
+        */
         lightingShader.setInt("shadowMap", 2);
         
 
@@ -251,10 +255,19 @@ int main()
         lightingShader.setMat4("view", view);
 
         lightingShader.setInt("depthMap",3);
-        RenderScene(lightingShader,ourModel,plane,model);
+        //RenderScene(lightingShader,ourModel,plane,model);
 
+        lightingShader.use();/*
+lightingShader.setVec3("material.diffuseColor", 0.8f, 0.8f, 0.8f);
+lightingShader.setVec3("material.specularColor", 1.0f, 1.0f, 1.0f);
+lightingShader.setFloat("material.shininess", 32.0f);*/
+        lightingShader.use();
+        lightingShader.setMat4("projection", projection);
+        lightingShader.setMat4("view", view);
+        lightingShader.setMat4("model", model); // Add this line to apply physics transformation
+        lightingShader.setInt("material.texture_diffuse1", 7);
 
-
+        myModel.draw();
 
         ImGui::Begin("Render engine config");
         ImGui::Text("hi");
@@ -382,7 +395,7 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
     camera.ProcessMouseScroll(static_cast<float>(yoffset));
 }
 
-
+/*
 void RenderScene(Shader& shader, Model& teapot, Model& floor, glm::mat4 model)
 {
     // Teapot (should use textures)
@@ -403,3 +416,4 @@ void RenderScene(Shader& shader, Model& teapot, Model& floor, glm::mat4 model)
     floor.Draw(shader);
 }
 
+*/
