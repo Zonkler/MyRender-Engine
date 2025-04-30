@@ -1,4 +1,7 @@
 #include <model.hpp>
+#include <assimp/scene.h>
+#include <assimp/Importer.hpp>
+#include <assimp/postprocess.h>
 
 Model::Model(char* path)
 {
@@ -205,6 +208,12 @@ unsigned int Model::TextureFromFile(const char *path, const std::string &directo
         std::cout << "Texture failed to load at path: " << path << std::endl;
         stbi_image_free(data);
     }
+    /*
+     std::shared_ptr<Texture> newTex = std::make_shared<Texture>();
+    if (newTe)
+    {
+    }
+    */
 
     return textureID;
 }

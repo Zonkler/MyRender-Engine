@@ -35,6 +35,8 @@ add_subdirectory(thirdparty/stb_image)
 add_subdirectory(thirdparty/stb_truetype)
 add_subdirectory(thirdparty/glm)
 add_subdirectory(thirdparty/imgui-docking)
+add_subdirectory(thirdparty/ImGuiFileDialog-master)
+
 
 # ======================== Executable Setup ========================
 file(GLOB_RECURSE MY_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
@@ -54,8 +56,18 @@ if(MSVC)
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
 
-target_include_directories("${CMAKE_PROJECT_NAME}" PUBLIC 
-    "${CMAKE_CURRENT_SOURCE_DIR}/include/")
+
+# Add explicit include directory for ImGui
+target_include_directories("${CMAKE_PROJECT_NAME}" PUBLIC
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/"
+    "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/imgui-docking/"
+    "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/ImGuiFileDialog-master/"
+)
+target_include_directories(ImGuiFileDialog PUBLIC 
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/../imgui-docking
+)
+target_link_libraries(ImGuiFileDialog PRIVATE imgui)
 
 # Single target_link_libraries call at the end
 target_link_libraries("${CMAKE_PROJECT_NAME}" PRIVATE 
@@ -65,4 +77,5 @@ target_link_libraries("${CMAKE_PROJECT_NAME}" PRIVATE
     stb_image 
     stb_truetype 
     imgui 
-    assimp::assimp)
+    assimp::assimp
+    ImGuiFileDialog)

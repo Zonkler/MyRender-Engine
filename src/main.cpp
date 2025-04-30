@@ -32,6 +32,9 @@
 #include <iostream>
 #include <memory> // for smart pointers
 
+#include "ImGuiFileDialog.h"
+#include "ImGuiFileDialogConfig.h"
+
 
 const glm::vec3 gravity(0.0f, -9.81f, 0.0f);
 
@@ -131,7 +134,7 @@ int main()
 
     ShadowMapper dirShadow(ShadowMapper::DIRECTIONAL, 4096);
     dirShadow.setFarPlane(50.5f);
-
+    
     /*-------- Load custom models --------*/
     Model ourModel("../assets/teapot/teapot.obj");
     Model plane("../assets/woodplane/woodplane.obj");
@@ -258,6 +261,30 @@ int main()
         ImGui::SliderFloat("Light X position",&greenPointLight.position.x,-20.0f,20.0f);
         ImGui::SliderFloat("Light Y position",&greenPointLight.position.y,-20.0f,20.0f);
         ImGui::SliderFloat("Light Z position",&greenPointLight.position.z,-20.0f,20.0f);
+        if (ImGui::Button("import model"))
+        {
+            IGFD::FileDialogConfig config;
+            config.path = ".";
+            config.countSelectionMax = 1;
+            config.flags = ImGuiFileDialogFlags_Modal;
+
+            ImGuiFileDialog::Instance()->OpenDialog(
+                "ChooseModelFile", "Choose Model File", ".*",
+                config);
+                
+        }
+        // Always display the file dialog when open
+        if (ImGuiFileDialog::Instance()->Display("ChooseModelFile")) 
+        {
+            if (ImGuiFileDialog::Instance()->IsOk()) 
+            {
+                std::string filePath = ImGuiFileDialog::Instance()->GetFilePathName();
+                std::cout << "Selected file: " << filePath << std::endl;
+                // Load your model here:
+                // yourModel.Load(filePath);
+            }
+            ImGuiFileDialog::Instance()->Close();
+        }
 
         ImGui::End();
 
