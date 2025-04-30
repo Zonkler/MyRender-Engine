@@ -21,7 +21,7 @@
 #include "UniformBuffer.hpp"
 #include "ShaderStorageBuffer.hpp"
 #include "Interface/UserInterface.hpp"
-#include "camera.hpp"
+#include "Tools/Camera.hpp"
 #include "Model/AssimpModel.hpp"
 #include "Model/AssimpInstance.hpp"
 #include "Model/ModelAndInstanceData.hpp"

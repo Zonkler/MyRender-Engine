@@ -12,7 +12,7 @@
 #include "OpenGL/OGLRenderer.hpp"
 #include "Model/InstanceSettings.hpp"
 #include "Tools/Logger.hpp"
-#include "camera.hpp"
+#include "Tools/Camera.hpp"
 
 OGLRenderer::OGLRenderer(GLFWwindow *window) {
   mRenderData.rdWindow = window;

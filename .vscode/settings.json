@@ -73,6 +73,7 @@
         "forward_list": "cpp",
         "regex": "cpp",
         "mutex": "cpp",
-        "thread": "cpp"
+        "thread": "cpp",
+        "filesystem": "cpp"
     }
 }
