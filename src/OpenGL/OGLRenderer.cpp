@@ -8,7 +8,7 @@
 #include "backends/imgui_impl_opengl3.h"
 
 #include <glm/gtc/matrix_transform.hpp>
-#include <OpenGL/Shader.hpp>
+#include <LoadShaders.hpp>
 #include "OpenGL/OGLRenderer.hpp"
 #include "Model/InstanceSettings.hpp"
 #include "Tools/Logger.hpp"
@@ -52,10 +52,6 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
   mUniformBuffer.init(uniformMatrixBufferSize);
   Logger::log(1, "%s: matrix uniform buffer (size %i bytes) successfully created\n", __FUNCTION__, uniformMatrixBufferSize);
 
-  if (!mAssimpShader.loadShaders("shader/assimp.vert", "shader/assimp.frag")) {
-    Logger::log(1, "%s: Assimp shader loading failed\n", __FUNCTION__);
-    return false;
-  }
 
   if (!mAssimpSkinningShader.loadShaders("shader/assimp_skinning.vert", "shader/assimp_skinning.frag")) {
     Logger::log(1, "%s: Assimp GPU skinning shader loading failed\n", __FUNCTION__);

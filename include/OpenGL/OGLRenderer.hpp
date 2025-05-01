@@ -17,7 +17,7 @@
 #include "Tools/Timer.hpp"
 #include "Framebuffer.hpp"
 #include "Texture.hpp"
-#include "Shader.hpp"
+#include "LoadShaders.hpp"
 #include "UniformBuffer.hpp"
 #include "ShaderStorageBuffer.hpp"
 #include "Interface/UserInterface.hpp"
@@ -61,8 +61,8 @@ class OGLRenderer {
     Timer mUIGenerateTimer{};
     Timer mUIDrawTimer{};
 
-    Shader mAssimpShader{};
-    Shader mAssimpSkinningShader{};
+    Shader mAssimpShader;
+    Shader mAssimpSkinningShader;
 
     Framebuffer mFramebuffer{};
     UniformBuffer mUniformBuffer{};
