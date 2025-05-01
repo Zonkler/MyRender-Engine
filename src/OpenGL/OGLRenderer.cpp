@@ -14,7 +14,7 @@
 #include "Tools/Logger.hpp"
 #include "Tools/Camera.hpp"
 
-OGLRenderer::OGLRenderer(GLFWwindow *window) {
+OGLRenderer::OGLRenderer(GLFWwindow *window){
   mRenderData.rdWindow = window;
 }
 
@@ -52,16 +52,15 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
   mUniformBuffer.init(uniformMatrixBufferSize);
   Logger::log(1, "%s: matrix uniform buffer (size %i bytes) successfully created\n", __FUNCTION__, uniformMatrixBufferSize);
 
+  mAssimpShader.loadShaders("../resources/colors.vert", "../resources/colors.frag");
 
-  if (!mAssimpSkinningShader.loadShaders("shader/assimp_skinning.vert", "shader/assimp_skinning.frag")) {
-    Logger::log(1, "%s: Assimp GPU skinning shader loading failed\n", __FUNCTION__);
-    return false;
-  }
+  mAssimpSkinningShader.loadShaders("../resources/assimp_skinning.vert", "../resources/assimp_skinning.vert");
+  /*
   if (!mAssimpSkinningShader.getUniformLocation("aModelStride")) {
     Logger::log(1, "%s: could not find symbol 'aModelStride' in GPU skinning shader\n", __FUNCTION__);
     return false;
   }
-
+  */
   Logger::log(1, "%s: shaders successfully loaded\n", __FUNCTION__);
 
   mUserInterface.init(mRenderData);
@@ -419,7 +418,8 @@ bool OGLRenderer::draw(float deltaTime) {
 
         mAssimpSkinningShader.use();
         mUploadToUBOTimer.start();
-        mAssimpSkinningShader.setUniformValue(numberOfBones);
+        mAssimpSkinningShader.setInt("aModelStride",numberOfBones);
+        //mAssimpSkinningShader.setUniformValue(numberOfBones);
         mShaderBoneMatrixBuffer.uploadSsboData(mModelBoneMatrices, 1);
         mRenderData.rdUploadToUBOTime += mUploadToUBOTimer.stop();
       } else {
@@ -475,9 +475,6 @@ void OGLRenderer::cleanup() {
 
   mShaderBoneMatrixBuffer.cleanup();
   mWorldPosBuffer.cleanup();
-
-  mAssimpSkinningShader.cleanup();
-  mAssimpShader.cleanup();
 
   mUserInterface.cleanup();
 
