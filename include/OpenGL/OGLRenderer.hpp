@@ -65,8 +65,8 @@ class OGLRenderer {
     Shader mAssimpSkinningShader;
 
     Framebuffer mFramebuffer{};
-    UniformBuffer mUniformBuffer{};
-    UserInterface mUserInterface{};
+    UniformBuffer mUniformBuffer;
+    UserInterface mUserInterface;
     Camera mCamera{};
 
     /* for non-animated models */

@@ -54,7 +54,7 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
 
   mAssimpShader.loadShaders("../resources/colors.vert", "../resources/colors.frag");
 
-  mAssimpSkinningShader.loadShaders("../resources/assimp_skinning.vert", "../resources/assimp_skinning.vert");
+  mAssimpSkinningShader.loadShaders("../resources/assimp_skinning.vert", "../resources/assimp_skinning.frag");
   /*
   if (!mAssimpSkinningShader.getUniformLocation("aModelStride")) {
     Logger::log(1, "%s: could not find symbol 'aModelStride' in GPU skinning shader\n", __FUNCTION__);

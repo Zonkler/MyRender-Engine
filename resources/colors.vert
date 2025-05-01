@@ -1,28 +1,29 @@
-#version 330 core
+#version 460 core
 layout (location = 0) in vec3 aPos;
-layout (location = 1) in vec3 aColor;
+layout (location = 1) in vec4 aColor;
 layout (location = 2) in vec3 aNormal;
-layout (location = 3) in vec2 aTexCoords;
+layout (location = 3) in vec2 aTexCoord;
+layout (location = 4) in uvec4 aBoneNum; // ignored
+layout (location = 5) in vec4 aBoneWeight; // ignored
 
+layout (location = 0) out vec4 color;
+layout (location = 1) out vec3 normal;
+layout (location = 2) out vec2 texCoord;
 
-out VS_OUT {
-    vec3 FragPos;
-    vec3 Normal;
-    vec2 TexCoords;
-    vec4 FragPosLightSpace;
-} vs_out;
+layout (std140, binding = 0) uniform Matrices {
+  mat4 view;
+  mat4 projection;
+};
 
-uniform mat4 model;
-uniform mat4 view;
-uniform mat4 projection;
-uniform mat4 lightSpaceMatrix;
+layout (std430, binding = 1) readonly restrict buffer WorldPosMatrices {
+  mat4 worldPosMat[];
+};
 
+void main() {
 
-void main()
-{
-    vs_out.FragPos = vec3(model * vec4(aPos, 1.0));
-    vs_out.Normal = transpose(inverse(mat3(model))) * aNormal;
-    vs_out.TexCoords = aTexCoords.st;
-    vs_out.FragPosLightSpace = lightSpaceMatrix * vec4(vs_out.FragPos, 1.0);
-    gl_Position = projection * view * vec4(vs_out.FragPos, 1.0);
+  mat4 modelMat = worldPosMat[gl_InstanceID];
+  gl_Position = projection * view * modelMat * vec4(aPos, 1.0);
+  color = aColor;
+  normal = vec3(transpose(inverse(modelMat)) * vec4(aNormal, 1.0));
+  texCoord = aTexCoord;
 }
