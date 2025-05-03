@@ -25,7 +25,7 @@
 #include "Model/AssimpModel.hpp"
 #include "Model/AssimpInstance.hpp"
 #include "Model/ModelAndInstanceData.hpp"
-
+#include "light.hpp"
 class OGLRenderer {
   public:
     OGLRenderer(GLFWwindow *window);
@@ -38,6 +38,8 @@ class OGLRenderer {
     void handleKeyEvents(int key, int scancode, int action, int mods);
     void handleMouseButtonEvents(int button, int action, int mods);
     void handleMousePositionEvents(double xPos, double yPos);
+
+    void AddLightning();
 
     bool hasModel(std::string modelFileName);
     bool addModel(std::string modelFileName);
@@ -53,7 +55,9 @@ class OGLRenderer {
   private:
     OGLRenderData mRenderData{};
     ModelAndInstanceData mModelInstData{};
+    
 
+  
     Timer mFrameTimer{};
     Timer mMatrixGenerateTimer{};
     Timer mUploadToVBOTimer{};

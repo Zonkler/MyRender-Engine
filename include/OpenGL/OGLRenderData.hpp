@@ -14,7 +14,7 @@
 #include <GLFW/glfw3.h>
 
 #include <assimp/material.h>
-
+#include <light.hpp>
 struct OGLVertex {
   glm::vec3 position = glm::vec3(0.0f);
   glm::vec4 color = glm::vec4(1.0f);
@@ -31,6 +31,7 @@ struct OGLMesh {
   bool usesPBRColors = false;
 };
 
+
 struct OGLRenderData {
   GLFWwindow *rdWindow = nullptr;
 
@@ -39,6 +40,9 @@ struct OGLRenderData {
 
   unsigned int rdTriangleCount = 0;
   unsigned int rdMatricesSize = 0;
+
+  std::vector<Light> Lights;
+  int rdLightIndex=0;
 
   int rdFieldOfView = 60;
 

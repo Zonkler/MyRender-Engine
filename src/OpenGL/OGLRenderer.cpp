@@ -25,7 +25,7 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
   /* required for perspective */
   mRenderData.rdWidth = width;
   mRenderData.rdHeight = height;
-
+  
   /* initialize GLAD */
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
     Logger::log(1, "%s error: failed to initialize GLAD\n", __FUNCTION__);
@@ -65,7 +65,7 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
 
   mUserInterface.init(mRenderData);
   Logger::log(1, "%s: user interface initialized\n", __FUNCTION__);
-
+  
   /* add backface culling and depth test already here */
   glEnable(GL_CULL_FACE);
   glEnable(GL_DEPTH_TEST);
@@ -78,6 +78,8 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
   Logger::log(1, "%s: SSBOs initialized\n", __FUNCTION__);
 
   /* register callbacks */
+
+
   mModelInstData.miModelCheckCallbackFunction = [this](std::string fileName) { return hasModel(fileName); };
   mModelInstData.miModelAddCallbackFunction = [this](std::string fileName) { return addModel(fileName); };
   mModelInstData.miModelDeleteCallbackFunction = [this](std::string modelName) { deleteModel(modelName); };
@@ -91,6 +93,8 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
 
   return true;
 }
+
+
 
 bool OGLRenderer::hasModel(std::string modelFileName) {
   auto modelIter =  std::find_if(mModelInstData.miModelList.begin(), mModelInstData.miModelList.end(),

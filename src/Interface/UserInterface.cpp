@@ -595,6 +595,66 @@ void UserInterface::createFrame(OGLRenderData &renderData, ModelAndInstanceData 
     }
   }
 
+  if (ImGui::CollapsingHeader("Lighting")) {
+    ImGui::Text("Number of Lights: %ld", renderData.Lights.size());
+    
+    if (ImGui::Button("Add Light")) {
+        Light tempLight;
+        tempLight.type = 1; // Default to point light
+        renderData.Lights.push_back(tempLight);
+        renderData.rdLightIndex = (int)renderData.Lights.size() - 1;
+    }
+
+    bool hasLights = !renderData.Lights.empty();
+    
+    if (hasLights) {
+        ImGui::Text("Selected Light:");
+        ImGui::SameLine();
+        
+        ImGui::PushButtonRepeat(true);
+        if (ImGui::ArrowButton("##Left", ImGuiDir_Left)) {
+            renderData.rdLightIndex = std::max(0, renderData.rdLightIndex - 1);
+        }
+        ImGui::SameLine();
+        
+        ImGui::PushItemWidth(30);
+        if (ImGui::DragInt("##SelLight", &renderData.rdLightIndex, 1, 0, 
+            (int)renderData.Lights.size() - 1, "%3d", flags)) 
+        {
+            renderData.rdLightIndex = std::clamp(renderData.rdLightIndex, 0, 
+                (int)renderData.Lights.size() - 1);
+        }
+        ImGui::PopItemWidth();
+        ImGui::SameLine();
+        
+        if (ImGui::ArrowButton("##Right", ImGuiDir_Right)) {
+            renderData.rdLightIndex = std::min((int)renderData.Lights.size() - 1, 
+                renderData.rdLightIndex + 1);
+        }
+        ImGui::PopButtonRepeat();
+
+        // Light Type (Radio Buttons)
+        int& lightType = renderData.Lights[renderData.rdLightIndex].type;
+        ImGui::Text("Type of light caster:");
+        ImGui::RadioButton("Directional", &lightType, 0); ImGui::SameLine();
+        ImGui::RadioButton("Point", &lightType, 1); ImGui::SameLine();
+        ImGui::RadioButton("Spotlight", &lightType, 2);
+
+        // Position Slider
+        ImGui::Text("Model Pos (X/Y/Z):     ");
+        ImGui::SameLine();
+        ImGui::SliderFloat3("##LightPos", 
+            glm::value_ptr(renderData.Lights[renderData.rdLightIndex].position),
+            -25.0f, 25.0f);
+
+        // Color Picker
+        ImGui::ColorPicker3("Pick lights diffuse color",
+            &renderData.Lights[renderData.rdLightIndex].diffuse[0], 
+            ImGuiColorEditFlags_PickerHueWheel);
+    } else {
+        ImGui::Text("No lights added.");
+    }
+}
   ImGui::End();
 }
 

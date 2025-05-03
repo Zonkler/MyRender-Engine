@@ -6,6 +6,9 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+
+
+
 struct Light{
     int type;
     glm::vec3 position;
@@ -18,5 +21,9 @@ struct Light{
     float quadratic;
     float cutOff;
     float outerCutOff;
+
 };
+
+
+
 #endif
