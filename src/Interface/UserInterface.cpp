@@ -600,7 +600,17 @@ void UserInterface::createFrame(OGLRenderData &renderData, ModelAndInstanceData 
     
     if (ImGui::Button("Add Light")) {
         Light tempLight;
-        tempLight.type = 1; // Default to point light
+        
+        tempLight.type = 1; // Point light
+        tempLight.position = glm::vec3(0.0f, 0.0f, 3.0f); // Example position
+        tempLight.diffuse = glm::vec3(0.0f, 0.5f, 1.0f); // White light
+        tempLight.ambient = glm::vec3(0.1f, 0.1f, 0.1f);
+        tempLight.specular = glm::vec3(1.0f, 1.0f, 1.0f);
+        tempLight.constant = 1.0f;
+        tempLight.linear = 0.09f;
+        tempLight.quadratic = 0.032f;
+
+        tempLight.type = 1; 
         renderData.Lights.push_back(tempLight);
         renderData.rdLightIndex = (int)renderData.Lights.size() - 1;
     }
@@ -636,17 +646,32 @@ void UserInterface::createFrame(OGLRenderData &renderData, ModelAndInstanceData 
         // Light Type (Radio Buttons)
         int& lightType = renderData.Lights[renderData.rdLightIndex].type;
         ImGui::Text("Type of light caster:");
-        ImGui::RadioButton("Directional", &lightType, 0); ImGui::SameLine();
-        ImGui::RadioButton("Point", &lightType, 1); ImGui::SameLine();
-        ImGui::RadioButton("Spotlight", &lightType, 2);
+        ImGui::RadioButton("Directional", &lightType, LIGHT_DIRECTIONAL); ImGui::SameLine();
+        ImGui::RadioButton("Point", &lightType, LIGHT_POINT); ImGui::SameLine();
+        ImGui::RadioButton("Spotlight", &lightType, LIGHT_SPOT);
+
+
+        
 
         // Position Slider
-        ImGui::Text("Model Pos (X/Y/Z):     ");
+        ImGui::Text("Light Pos (X/Y/Z): ");
         ImGui::SameLine();
         ImGui::SliderFloat3("##LightPos", 
             glm::value_ptr(renderData.Lights[renderData.rdLightIndex].position),
             -25.0f, 25.0f);
 
+
+        if (renderData.Lights[renderData.rdLightIndex].type == LIGHT_DIRECTIONAL || renderData.Lights[renderData.rdLightIndex].type == LIGHT_SPOT)
+        {
+          ImGui::Text("Lights Direction:");
+          ImGui::SameLine();
+          ImGui::SliderFloat3("##LightDir", 
+            glm::value_ptr(renderData.Lights[renderData.rdLightIndex].direction),
+            -25.0f, 25.0f);
+        }
+
+        
+        
         // Color Picker
         ImGui::ColorPicker3("Pick lights diffuse color",
             &renderData.Lights[renderData.rdLightIndex].diffuse[0], 

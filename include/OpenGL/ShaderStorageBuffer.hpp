@@ -11,7 +11,7 @@ class ShaderStorageBuffer {
 
     void uploadSsboData(std::vector<glm::mat4> bufferData, int bindingPoint);
     void uploadSsboData(std::vector<glm::mat2x4> bufferData, int bindingPoint);
-
+    void uploadSsboData(const void* data, size_t dataSize, GLuint bindingPoint);
     void cleanup();
 
   private:

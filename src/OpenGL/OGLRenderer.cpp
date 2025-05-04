@@ -55,6 +55,8 @@ bool OGLRenderer::init(unsigned int width, unsigned int height) {
   mAssimpShader.loadShaders("../resources/colors.vert", "../resources/colors.frag");
 
   mAssimpSkinningShader.loadShaders("../resources/assimp_skinning.vert", "../resources/assimp_skinning.frag");
+  
+  mAssimpShader.setInt("numLights",0);
   /*
   if (!mAssimpSkinningShader.getUniformLocation("aModelStride")) {
     Logger::log(1, "%s: could not find symbol 'aModelStride' in GPU skinning shader\n", __FUNCTION__);
@@ -398,6 +400,14 @@ bool OGLRenderer::draw(float deltaTime) {
   mUniformBuffer.uploadUboData(matrixData, 0);
   mRenderData.rdUploadToUBOTime += mUploadToUBOTimer.stop();
 
+
+  mAssimpShader.setInt("numLights",mRenderData.Lights.size());
+  for (size_t i = 0; i < mRenderData.Lights.size(); i++)
+  {
+    mAssimpShader.setLight("lights["+std::to_string(i)+']',mRenderData.Lights[i]);
+  }
+  mAssimpShader.setVec3("viewPos",mRenderData.rdCameraWorldPosition);
+
   /* draw the models */
   for (const auto& modelType : mModelInstData.miAssimpInstancesPerModel) {
     size_t numberOfInstances = modelType.second.size();
@@ -423,7 +433,6 @@ bool OGLRenderer::draw(float deltaTime) {
         mAssimpSkinningShader.use();
         mUploadToUBOTimer.start();
         mAssimpSkinningShader.setInt("aModelStride",numberOfBones);
-        //mAssimpSkinningShader.setUniformValue(numberOfBones);
         mShaderBoneMatrixBuffer.uploadSsboData(mModelBoneMatrices, 1);
         mRenderData.rdUploadToUBOTime += mUploadToUBOTimer.stop();
       } else {
@@ -485,4 +494,4 @@ void OGLRenderer::cleanup() {
   mUniformBuffer.cleanup();
 
   mFramebuffer.cleanup();
-}
+} 

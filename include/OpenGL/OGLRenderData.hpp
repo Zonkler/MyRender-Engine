@@ -43,6 +43,7 @@ struct OGLRenderData {
 
   std::vector<Light> Lights;
   int rdLightIndex=0;
+  const int rdMaxLights=32;
 
   int rdFieldOfView = 60;
 
