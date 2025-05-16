@@ -81,6 +81,10 @@ class OGLRenderer {
     std::vector<glm::mat4> mModelBoneMatrices{};
     ShaderStorageBuffer mShaderBoneMatrixBuffer{};
 
+
+    /* for computer shader */
+    std::vector<NodeTransformData> mNodeTransFormData{};
+
     bool mMouseLock = false;
     int mMouseXPos = 0;
     int mMouseYPos = 0;

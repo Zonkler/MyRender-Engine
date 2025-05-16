@@ -24,7 +24,7 @@ void ShaderStorageBuffer::uploadSsboData(std::vector<glm::mat4> bufferData, int 
   }
 
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, mShaderStorageBuffer);
-  glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, bufferSize, bufferData.data());
+  glBufferData(GL_SHADER_STORAGE_BUFFER,  bufferSize, bufferData.data(),GL_DYNAMIC_COPY);
   glBindBufferRange(GL_SHADER_STORAGE_BUFFER, bindingPoint, mShaderStorageBuffer, 0,
     bufferSize);
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
@@ -43,7 +43,7 @@ void ShaderStorageBuffer::uploadSsboData(std::vector<glm::mat2x4> bufferData, in
   }
 
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, mShaderStorageBuffer);
-  glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, bufferSize, bufferData.data());
+  glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, bufferData.data(),GL_DYNAMIC_COPY);
   glBindBufferRange(GL_SHADER_STORAGE_BUFFER, bindingPoint, mShaderStorageBuffer, 0,
     bufferSize);
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);

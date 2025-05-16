@@ -6,7 +6,6 @@
 
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_opengl3.h"
-
 #include <glm/gtc/matrix_transform.hpp>
 #include <LoadShaders.hpp>
 #include "OpenGL/OGLRenderer.hpp"
@@ -16,6 +15,7 @@
 
 OGLRenderer::OGLRenderer(GLFWwindow *window){
   mRenderData.rdWindow = window;
+  
 }
 
 bool OGLRenderer::init(unsigned int width, unsigned int height) {
@@ -376,7 +376,7 @@ bool OGLRenderer::draw(float deltaTime) {
   /* draw to framebuffer */
   mFramebuffer.bind();
 
-  glClearColor(0.25f, 0.25f, 0.25f, 1.0f);
+  glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
   glClearDepth(1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glEnable(GL_FRAMEBUFFER_SRGB);
@@ -453,6 +453,7 @@ bool OGLRenderer::draw(float deltaTime) {
       }
 
       model->drawInstanced(numberOfInstances);
+      
     }
   }
 

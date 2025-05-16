@@ -594,7 +594,7 @@ void UserInterface::createFrame(OGLRenderData &renderData, ModelAndInstanceData 
       modInstData.miAssimpInstances.at(modInstData.miSelectedInstance)->setInstanceSettings(settings);
     }
   }
-
+  
   if (ImGui::CollapsingHeader("Lighting")) {
     ImGui::Text("Number of Lights: %ld", renderData.Lights.size());
     
@@ -651,7 +651,6 @@ void UserInterface::createFrame(OGLRenderData &renderData, ModelAndInstanceData 
         ImGui::RadioButton("Spotlight", &lightType, LIGHT_SPOT);
 
 
-        
 
         // Position Slider
         ImGui::Text("Light Pos (X/Y/Z): ");
