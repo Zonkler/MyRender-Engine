@@ -21,11 +21,15 @@ public:
     // constructor generates the shader on the fly
     // ------------------------------------------------------------------------
     Shader() = default;
+   
+
+
     Shader(const char* vertexPath, const char* fragmentPath);
 
     Shader(const char* vertexPath, const char* fragmentPath,const char* geometrypath);
 
     void loadShaders(const char* vertexPath, const char* fragmentPath);
+    void loadComputerShader(const char* computePath);
     // ------------------------------------------------------------------------
     void use() const;
     // utility uniform functions

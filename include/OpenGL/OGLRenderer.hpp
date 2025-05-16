@@ -67,7 +67,10 @@ class OGLRenderer {
 
     Shader mAssimpShader;
     Shader mAssimpSkinningShader;
+    Shader mAssimpTransformComputeShader;
+    Shader mAssimpMatrixComputeShader;
 
+    
     Framebuffer mFramebuffer{};
     UniformBuffer mUniformBuffer;
     UserInterface mUserInterface;
@@ -80,7 +83,9 @@ class OGLRenderer {
     /* for animated models */
     std::vector<glm::mat4> mModelBoneMatrices{};
     ShaderStorageBuffer mShaderBoneMatrixBuffer{};
-
+    ShaderStorageBuffer mShaderTRSMatrixBuffer{};
+    ShaderStorageBuffer mNodeTransformBuffer{};
+    ShaderStorageBuffer mShaderModelRootMatrixBuffer{};
 
     /* for computer shader */
     std::vector<NodeTransformData> mNodeTransFormData{};

@@ -34,6 +34,8 @@ bool AssimpModel::loadModel(std::string modelFilename, unsigned int extraImportF
   }
   Logger::log(1, "%s: model contains %i vertices and %i faces\n", __FUNCTION__, mVertexCount, mTriangleCount);
 
+  aiNode* rootNode = scene->mRootNode;
+
   if (scene->HasTextures()) {
     unsigned int numTextures = scene->mNumTextures;
 
@@ -79,10 +81,9 @@ bool AssimpModel::loadModel(std::string modelFilename, unsigned int extraImportF
   /* nodes */
   Logger::log(1, "%s: ... processing nodes...\n", __FUNCTION__);
 
-  aiNode* rootNode = scene->mRootNode;
   std::string rootNodeName = rootNode->mName.C_Str();
   mRootNode = AssimpNode::createNode(rootNodeName);
-  Logger::log(1, "%s: root node name: '%s'\n", __FUNCTION__, rootNodeName.c_str());
+  Logger::log(2, "%s: root node name: '%s'\n", __FUNCTION__, rootNodeName.c_str());
 
   processNode(mRootNode, rootNode, scene, assetDirectory);
 
@@ -99,13 +100,28 @@ bool AssimpModel::loadModel(std::string modelFilename, unsigned int extraImportF
     }
   }
 
-  for (const auto& node : mNodeList) {
-    std::string nodeName = node->getNodeName();
-    const auto boneIter = std::find_if(mBoneList.begin(), mBoneList.end(), [nodeName](std::shared_ptr<AssimpBone>& bone) { return bone->getBoneName() == nodeName; });
-     if (boneIter != mBoneList.end()) {
-      mBoneOffsetMatrices.insert({nodeName, mBoneList.at(std::distance(mBoneList.begin(), boneIter))->getOffsetMatrix()});
+  std::vector<glm::mat4> boneOffsetMatricesList{};
+  std::vector<int32_t> boneParentIndexList{};
+
+  for (const auto& bone : mBoneList) {
+    boneOffsetMatricesList.emplace_back(bone->getOffsetMatrix());
+
+    std::string parentNodeName = mNodeMap.at(bone->getBoneName())->getParentNodeName();
+    const auto boneIter = std::find_if(mBoneList.begin(), mBoneList.end(), [parentNodeName](std::shared_ptr<AssimpBone>& bone) { return bone->getBoneName() == parentNodeName; });
+    if (boneIter == mBoneList.end()) {
+      boneParentIndexList.emplace_back(-1); // root node gets a -1 to identify
+    } else {
+      boneParentIndexList.emplace_back(std::distance(mBoneList.begin(), boneIter));
     }
   }
+
+  Logger::log(1, "%s: -- bone parents --\n", __FUNCTION__);
+  for (unsigned int i = 0; i < mBoneList.size(); ++i) {
+    Logger::log(1, "%s: bone %i (%s) has parent %i (%s)\n", __FUNCTION__, i, mBoneList.at(i)->getBoneName().c_str(), boneParentIndexList.at(i),
+      boneParentIndexList.at(i) < 0 ? "invalid" : mBoneList.at(boneParentIndexList.at(i))->getBoneName().c_str());
+  }
+  Logger::log(1, "%s: -- bone parents --\n", __FUNCTION__);
+
 
   /* create vertex buffers for the meshes */
   for (const auto& mesh : mModelMeshes) {
@@ -114,6 +130,9 @@ bool AssimpModel::loadModel(std::string modelFilename, unsigned int extraImportF
     buffer.uploadData(mesh.vertices, mesh.indices);
     mVertexBuffers.emplace_back(buffer);
   }
+
+  mShaderBoneMatrixOffsetBuffer.uploadSsboData(boneOffsetMatricesList);
+  mShaderBoneParentBuffer.uploadSsboData(boneParentIndexList);
 
   /* animations */
   unsigned int numAnims = scene->mNumAnimations;
@@ -124,7 +143,7 @@ bool AssimpModel::loadModel(std::string modelFilename, unsigned int extraImportF
       __FUNCTION__, i, animation->mNumChannels, animation->mNumMeshChannels, animation->mNumMorphMeshChannels);
 
     std::shared_ptr<AssimpAnimClip> animClip = std::make_shared<AssimpAnimClip>();
-    animClip->addChannels(animation);
+    animClip->addChannels(animation, mBoneList);
     if (animClip->getClipName().empty()) {
       animClip->setClipName(std::to_string(i));
     }
@@ -156,10 +175,9 @@ void AssimpModel::processNode(std::shared_ptr<AssimpNode> node, aiNode* aNode, c
       aiMesh* modelMesh = scene->mMeshes[aNode->mMeshes[i]];
 
       AssimpMesh mesh;
-      mesh.processMesh(modelMesh, scene, assetDirectory);
+      mesh.processMesh(modelMesh, scene, assetDirectory, mTextures);
 
       mModelMeshes.emplace_back(mesh.getMesh());
-      mTextures.merge(mesh.getTextures());
 
       /* avoid inserting duplicate bone Ids - meshes can reference the same bones */
       std::vector<std::shared_ptr<AssimpBone>> flatBones = mesh.getBoneList();
@@ -205,7 +223,7 @@ void AssimpModel::draw() {
       }
     }
 
-    glActiveTexture(GL_TEXTURE7);
+    glActiveTexture(GL_TEXTURE0);
     if (diffuseTex) {
       diffuseTex->bind();
     } else {
@@ -311,10 +329,6 @@ const std::vector<std::shared_ptr<AssimpBone>>& AssimpModel::getBoneList() {
   return mBoneList;
 }
 
-const std::unordered_map<std::string, glm::mat4>& AssimpModel::getBoneOffsetMatrices() {
-  return mBoneOffsetMatrices;
-}
-
 const std::vector<std::shared_ptr<AssimpAnimClip>>& AssimpModel::getAnimClips() {
   return mAnimClips;
 }
@@ -323,6 +337,10 @@ bool AssimpModel::hasAnimations() {
   return !mAnimClips.empty();
 }
 
-const std::shared_ptr<AssimpNode> AssimpModel::getRootNode() {
-  return mRootNode;
+void AssimpModel::bindBoneMatrixOffsetBuffer(int bindingPoint) {
+  mShaderBoneMatrixOffsetBuffer.bind(bindingPoint);
+}
+
+void AssimpModel::bindBoneParentBuffer(int bindingPoint) {
+  mShaderBoneParentBuffer.bind(bindingPoint);
 }

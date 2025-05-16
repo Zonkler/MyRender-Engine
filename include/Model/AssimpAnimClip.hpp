@@ -7,11 +7,12 @@
 #include <assimp/anim.h>
 
 #include "AssimpAnimChannel.hpp"
+#include "Model/AssimpBone.hpp"
 
 class AssimpAnimClip {
   public:
-    void addChannels(aiAnimation* animation);
-    std::vector<std::shared_ptr<AssimpAnimChannel>> getChannels();
+    void addChannels(aiAnimation* animation, std::vector<std::shared_ptr<AssimpBone>> boneList);
+    const std::vector<std::shared_ptr<AssimpAnimChannel>>& getChannels();
 
     std::string getClipName();
     float getClipDuration();
@@ -21,8 +22,9 @@ class AssimpAnimClip {
 
   private:
     std::string mClipName;
-    double mClipDuration = 0.0f;
-    double mClipTicksPerSecond = 0.0f;
+    float mClipDuration = 0.0f;
+    float mClipTicksPerSecond = 0.0f;
 
     std::vector<std::shared_ptr<AssimpAnimChannel>> mAnimChannels{};
 };
+

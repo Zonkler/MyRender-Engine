@@ -55,14 +55,9 @@ float AssimpAnimChannel::getMaxTime() {
   return std::max(std::max(maxRotationTime, maxTranslationTime), maxScaleTime);
 }
 
-/* precalculate TRS matrix */
-glm::mat4 AssimpAnimChannel::getTRSMatrix(float time) {
-  return glm::translate(glm::mat4_cast(getRotation(time)) * glm::scale(glm::mat4(1.0f), getScaling(time)), getTranslation(time));
-}
-
-glm::vec3 AssimpAnimChannel::getTranslation(float time) {
+glm::vec4 AssimpAnimChannel::getTranslation(float time) {
   if (mTranslations.empty()) {
-    return glm::vec3(0.0f);
+    return glm::vec4(0.0f);
   }
 
   /* handle time before and after */
@@ -70,13 +65,13 @@ glm::vec3 AssimpAnimChannel::getTranslation(float time) {
     case 0:
       /* do not change vertex position-> aiAnimBehaviour_DEFAULT */
       if (time < mTranslationTiminngs.at(0)) {
-        return glm::vec3(0.0f);
+        return glm::vec4(0.0f);
       }
       break;
     case 1:
       /* use value at zero time "aiAnimBehaviour_CONSTANT" */
       if (time < mTranslationTiminngs.at(0)) {
-        return mTranslations.at(0);
+        return glm::vec4(mTranslations.at(0), 1.0f);
       }
       break;
     default:
@@ -87,12 +82,12 @@ glm::vec3 AssimpAnimChannel::getTranslation(float time) {
   switch(mPostState) {
     case 0:
       if (time > mTranslationTiminngs.at(mTranslationTiminngs.size() - 1)) {
-        return glm::vec3(0.0f);
+        return glm::vec4(0.0f);
       }
       break;
     case 1:
       if (time >= mTranslationTiminngs.at(mTranslationTiminngs.size() - 1)) {
-        return mTranslations.at(mTranslations.size() - 1);
+        return glm::vec4(mTranslations.at(mTranslations.size() - 1), 1.0f);
       }
       break;
     default:
@@ -106,12 +101,12 @@ glm::vec3 AssimpAnimChannel::getTranslation(float time) {
 
   float interpolatedTime = (time - mTranslationTiminngs.at(timeIndex)) * mInverseTranslationTimeDiffs.at(timeIndex);
 
-  return glm::mix(mTranslations.at(timeIndex), mTranslations.at(timeIndex + 1), interpolatedTime);
+  return glm::vec4(glm::mix(mTranslations.at(timeIndex), mTranslations.at(timeIndex + 1), interpolatedTime), 1.0f);
 }
 
-glm::vec3 AssimpAnimChannel::getScaling(float time) {
+glm::vec4 AssimpAnimChannel::getScaling(float time) {
   if (mScalings.empty()) {
-    return glm::vec3(1.0f);
+    return glm::vec4(1.0f);
   }
 
   /* handle time before and after */
@@ -119,13 +114,13 @@ glm::vec3 AssimpAnimChannel::getScaling(float time) {
     case 0:
       /* do not change vertex position-> aiAnimBehaviour_DEFAULT */
       if (time < mScaleTimings.at(0)) {
-        return glm::vec3(0.0f);
+        return glm::vec4(0.0f);
       }
       break;
     case 1:
       /* use value at zero time "aiAnimBehaviour_CONSTANT" */
       if (time < mScaleTimings.at(0)) {
-        return mScalings.at(0);
+        return glm::vec4(mScalings.at(0), 1.0f);
       }
       break;
     default:
@@ -136,12 +131,12 @@ glm::vec3 AssimpAnimChannel::getScaling(float time) {
   switch(mPostState) {
     case 0:
       if (time > mScaleTimings.at(mScaleTimings.size() - 1)) {
-        return glm::vec3(0.0f);
+        return glm::vec4(0.0f);
       }
       break;
     case 1:
       if (time >= mScaleTimings.at(mScaleTimings.size() - 1)) {
-        return mScalings.at(mScalings.size() - 1);
+        return glm::vec4(mScalings.at(mScalings.size() - 1), 1.0f);
       }
       break;
     default:
@@ -154,12 +149,12 @@ glm::vec3 AssimpAnimChannel::getScaling(float time) {
 
   float interpolatedTime = (time - mScaleTimings.at(timeIndex)) * mInverseScaleTimeDiffs.at(timeIndex);
 
-  return glm::mix(mScalings.at(timeIndex), mScalings.at(timeIndex + 1), interpolatedTime);
+  return glm::vec4(glm::mix(mScalings.at(timeIndex), mScalings.at(timeIndex + 1), interpolatedTime), 1.0f);
 }
 
-glm::quat AssimpAnimChannel::getRotation(float time) {
+glm::vec4 AssimpAnimChannel::getRotation(float time) {
   if (mRotations.empty()) {
-    return glm::identity<glm::quat>();
+    return glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
   }
 
   /* handle time before and after */
@@ -167,13 +162,14 @@ glm::quat AssimpAnimChannel::getRotation(float time) {
     case 0:
       /* do not change vertex position-> aiAnimBehaviour_DEFAULT */
       if (time < mRotationTiminigs.at(0)) {
-        return glm::identity<glm::quat>();
+        return glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
       }
       break;
     case 1:
       /* use value at zero time "aiAnimBehaviour_CONSTANT" */
       if (time < mRotationTiminigs.at(0)) {
-        return mRotations.at(0);
+        glm::quat rotation = mRotations.at(0);
+        return glm::vec4(rotation.x, rotation.y, rotation.z, rotation.w);
       }
       break;
     default:
@@ -184,12 +180,13 @@ glm::quat AssimpAnimChannel::getRotation(float time) {
   switch(mPostState) {
     case 0:
       if (time > mRotationTiminigs.at(mRotationTiminigs.size() - 1)) {
-        return glm::identity<glm::quat>();
+        return glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
       }
       break;
     case 1:
       if (time >= mRotationTiminigs.at(mRotationTiminigs.size() - 1)) {
-        return mRotations.at(mRotations.size() - 1);
+        glm::quat rotation = mRotations.at(mRotations.size() - 1);
+        return glm::vec4(rotation.x, rotation.y, rotation.z, rotation.w);
       }
       break;
     default:
@@ -203,5 +200,16 @@ glm::quat AssimpAnimChannel::getRotation(float time) {
   float interpolatedTime = (time - mRotationTiminigs.at(timeIndex)) * mInverseRotationTimeDiffs.at(timeIndex);
 
   /* roiations are interpolated via SLERP */
-  return glm::normalize(glm::slerp(mRotations.at(timeIndex), mRotations.at(timeIndex + 1), interpolatedTime));
+  glm::quat rotation = glm::normalize(glm::slerp(mRotations.at(timeIndex), mRotations.at(timeIndex + 1), interpolatedTime));
+
+  /* return order of GLM vec4 */
+  return glm::vec4(rotation.x, rotation.y, rotation.z, rotation.w);
+}
+
+int AssimpAnimChannel::getBoneId() {
+  return mBoneId;
+}
+
+void AssimpAnimChannel::setBoneId(unsigned int id) {
+  mBoneId = id;
 }

@@ -10,19 +10,17 @@ void VertexIndexBuffer::init() {
 
   glBindBuffer(GL_ARRAY_BUFFER, mVertexVBO);
 
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(OGLVertex), (void*) offsetof(OGLVertex, position));
+  glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(OGLVertex), (void*) offsetof(OGLVertex, position));
   glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(OGLVertex), (void*) offsetof(OGLVertex, color));
-  glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(OGLVertex), (void*) offsetof(OGLVertex, normal));
-  glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(OGLVertex), (void*) offsetof(OGLVertex, uv));
-  glVertexAttribIPointer(4, 4, GL_UNSIGNED_INT,   sizeof(OGLVertex), (void*) offsetof(OGLVertex, boneNumber));
-  glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(OGLVertex), (void*) offsetof(OGLVertex, boneWeight));
+  glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(OGLVertex), (void*) offsetof(OGLVertex, normal));
+  glVertexAttribIPointer(3, 4, GL_UNSIGNED_INT,   sizeof(OGLVertex), (void*) offsetof(OGLVertex, boneNumber));
+  glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(OGLVertex), (void*) offsetof(OGLVertex, boneWeight));
 
   glEnableVertexAttribArray(0);
   glEnableVertexAttribArray(1);
   glEnableVertexAttribArray(2);
   glEnableVertexAttribArray(3);
   glEnableVertexAttribArray(4);
-  glEnableVertexAttribArray(5);
 
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIndexVBO);
   /* do NOT unbind index buffer here!*/
@@ -91,3 +89,4 @@ void VertexIndexBuffer::bindAndDrawIndirectInstanced(GLuint mode, unsigned int n
   drawIndirectInstanced(mode, num, instanceCount);
   unbind();
 }
+

@@ -15,11 +15,12 @@ class AssimpAnimChannel {
     std::string getTargetNodeName();
     float getMaxTime();
 
-    glm::mat4 getTRSMatrix(float time);
+    glm::vec4 getTranslation(float time); // last element is ignored
+    glm::vec4 getScaling(float time); // last element is ignored
+    glm::vec4 getRotation(float time); // is a quaternion, but return vec4 for shader
 
-    glm::vec3 getTranslation(float time);
-    glm::vec3 getScaling(float time);
-    glm::quat getRotation(float time);
+    int getBoneId();
+    void setBoneId(unsigned int id);
 
   private:
     std::string mNodeName;
@@ -39,4 +40,6 @@ class AssimpAnimChannel {
 
     unsigned int mPreState = 0;
     unsigned int mPostState = 0;
+
+    int mBoneId = -1;
 };

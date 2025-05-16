@@ -1,5 +1,4 @@
 #include "OpenGL/ShaderStorageBuffer.hpp"
-#include "Tools/Logger.hpp"
 
 void ShaderStorageBuffer::init(size_t bufferSize) {
   mBufferSize = bufferSize;
@@ -11,49 +10,22 @@ void ShaderStorageBuffer::init(size_t bufferSize) {
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }
 
-void ShaderStorageBuffer::uploadSsboData(std::vector<glm::mat4> bufferData, int bindingPoint) {
-  if (bufferData.empty()) {
+void ShaderStorageBuffer::bind(int bindingPoint) {
+  if (mBufferSize == 0) {
     return;
   }
 
-  size_t bufferSize = bufferData.size() * sizeof(glm::mat4);
-  if (bufferSize > mBufferSize) {
-    Logger::log(1, "%s: resizing SSBO %i from %i to %i bytes\n", __FUNCTION__, mShaderStorageBuffer, mBufferSize, bufferSize);
-    cleanup();
-    init(bufferSize);
-  }
-
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, mShaderStorageBuffer);
-  glBufferData(GL_SHADER_STORAGE_BUFFER,  bufferSize, bufferData.data(),GL_DYNAMIC_COPY);
-  glBindBufferRange(GL_SHADER_STORAGE_BUFFER, bindingPoint, mShaderStorageBuffer, 0,
-    bufferSize);
-  glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-}
-
-void ShaderStorageBuffer::uploadSsboData(std::vector<glm::mat2x4> bufferData, int bindingPoint) {
-  if (bufferData.empty()) {
-    return;
-  }
-
-  size_t bufferSize = bufferData.size() * sizeof(glm::mat2x4);
-  if (bufferSize > mBufferSize) {
-    Logger::log(1, "%s: resizing SSBO %i from %i to %i bytes\n", __FUNCTION__, mShaderStorageBuffer, mBufferSize, bufferSize);
-    cleanup();
-    init(bufferSize);
-  }
-
-  glBindBuffer(GL_SHADER_STORAGE_BUFFER, mShaderStorageBuffer);
-  glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, bufferData.data(),GL_DYNAMIC_COPY);
-  glBindBufferRange(GL_SHADER_STORAGE_BUFFER, bindingPoint, mShaderStorageBuffer, 0,
-    bufferSize);
-  glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-}
-
-void ShaderStorageBuffer::uploadSsboData(const void* data, size_t dataSize, GLuint bindingPoint) {
-  glBindBuffer(GL_SHADER_STORAGE_BUFFER, mShaderStorageBuffer);
-  glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, dataSize, data);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, bindingPoint, mShaderStorageBuffer);
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+}
+
+void ShaderStorageBuffer::checkForResize(size_t newBufferSize) {
+  if (newBufferSize > mBufferSize) {
+    Logger::log(1, "%s: resizing SSBO %i from %i to %i bytes\n", __FUNCTION__, mShaderStorageBuffer, mBufferSize, newBufferSize);
+    cleanup();
+    init(newBufferSize);
+  }
 }
 
 void ShaderStorageBuffer::cleanup() {

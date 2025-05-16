@@ -3,7 +3,8 @@
 #include "Tools/Logger.hpp"
 #include "Tools/Tools.hpp"
 
-bool AssimpMesh::processMesh(aiMesh* mesh, const aiScene* scene, std::string assetDirectory) {
+bool AssimpMesh::processMesh(aiMesh* mesh, const aiScene* scene, std::string assetDirectory,
+    std::unordered_map<std::string, std::shared_ptr<Texture>>& textures) {
   mMeshName = mesh->mName.C_Str();
 
   mTriangleCount = mesh->mNumFaces;
@@ -29,6 +30,7 @@ bool AssimpMesh::processMesh(aiMesh* mesh, const aiScene* scene, std::string ass
     aiString materialName = material->GetName();
     Logger::log(1, "%s: - material found, name '%s'\n", __FUNCTION__, materialName.C_Str());
 
+    bool texturesFound = false;
     if (mesh->mMaterialIndex >= 0) {
       // scan only for diifuse and scalar textures for a start
       std::vector<aiTextureType> supportedTexTypes = { aiTextureType_DIFFUSE, aiTextureType_SPECULAR };
@@ -43,6 +45,13 @@ bool AssimpMesh::processMesh(aiMesh* mesh, const aiScene* scene, std::string ass
 
             std::string texName = textureName.C_Str();
             mMesh.textures.insert({texType, texName});
+            texturesFound = true;;
+
+            /* skip already loaded textures */
+            if (textures.count(texName) > 0) {
+              Logger::log(1, "%s: texture '%s' already loaded, skipping\n", __FUNCTION__, texName.c_str());
+              continue;
+            }
 
             // do not try to load internal textures
             if (!texName.empty() && texName.find("*") != 0) {
@@ -53,7 +62,7 @@ bool AssimpMesh::processMesh(aiMesh* mesh, const aiScene* scene, std::string ass
                 continue;
               }
 
-              mTextures.insert({texName, newTex});
+              textures.insert({texName, newTex});
             }
           }
         }
@@ -61,7 +70,7 @@ bool AssimpMesh::processMesh(aiMesh* mesh, const aiScene* scene, std::string ass
     }
 
     aiColor4D baseColor(0.0f, 0.0f, 0.0f, 1.0f);
-    if (material->Get(AI_MATKEY_COLOR_DIFFUSE, baseColor) == aiReturn_SUCCESS && mTextures.empty()) {
+    if (material->Get(AI_MATKEY_COLOR_DIFFUSE, baseColor) == aiReturn_SUCCESS && !texturesFound) {
       mBaseColor = glm::vec4(baseColor.r, baseColor.g, baseColor.b, baseColor.a);
       mMesh.usesPBRColors = true;
     }
@@ -72,7 +81,6 @@ bool AssimpMesh::processMesh(aiMesh* mesh, const aiScene* scene, std::string ass
     vertex.position.x = mesh->mVertices[i].x;
     vertex.position.y = mesh->mVertices[i].y;
     vertex.position.z = mesh->mVertices[i].z;
-
 
     if (mesh->HasVertexColors(0)) {
       vertex.color.r = mesh->mColors[0][i].r;
@@ -92,14 +100,15 @@ bool AssimpMesh::processMesh(aiMesh* mesh, const aiScene* scene, std::string ass
       vertex.normal.y = mesh->mNormals[i].y;
       vertex.normal.z = mesh->mNormals[i].z;
     } else {
-      vertex.normal = glm::vec3(0.0f);
+      vertex.normal = glm::vec4(0.0f);
     }
-
+    
     if (mesh->HasTextureCoords(0)) {
-      vertex.uv.x = mesh->mTextureCoords[0][i].x;
-      vertex.uv.y = mesh->mTextureCoords[0][i].y;
+      vertex.position.w = mesh->mTextureCoords[0][i].x;
+      vertex.normal.w = mesh->mTextureCoords[0][i].y;
     } else {
-      vertex.uv = glm::vec2(0.0f);
+      vertex.position.w = 0.0f;
+      vertex.normal.w = 0.0f;
     }
 
     mMesh.vertices.emplace_back(vertex);
@@ -111,7 +120,6 @@ bool AssimpMesh::processMesh(aiMesh* mesh, const aiScene* scene, std::string ass
     mMesh.indices.push_back(face.mIndices[1]);
     mMesh.indices.push_back(face.mIndices[2]);
   }
-
 
   if (mesh->HasBones()) {
     unsigned int numBones = mesh->mNumBones;
@@ -162,10 +170,6 @@ OGLMesh AssimpMesh::getMesh() {
 
 std::string AssimpMesh::getMeshName() {
   return mMeshName;
-}
-
-std::unordered_map<std::string, std::shared_ptr<Texture>> AssimpMesh::getTextures() {
-  return mTextures;
 }
 
 unsigned int AssimpMesh::getTriangleCount() {

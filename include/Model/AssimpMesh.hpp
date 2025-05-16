@@ -14,7 +14,8 @@
 
 class AssimpMesh {
   public:
-    bool processMesh(aiMesh* mesh, const aiScene* scene, std::string assetDirectory);
+    bool processMesh(aiMesh* mesh, const aiScene* scene, std::string assetDirectory,
+      std::unordered_map<std::string, std::shared_ptr<Texture>>& textures);
 
     std::string getMeshName();
     unsigned int getTriangleCount();
@@ -22,7 +23,6 @@ class AssimpMesh {
 
     OGLMesh getMesh();
     std::vector<uint32_t> getIndices();
-    std::unordered_map<std::string, std::shared_ptr<Texture>> getTextures();
     std::vector<std::shared_ptr<AssimpBone>> getBoneList();
 
   private:
@@ -33,6 +33,5 @@ class AssimpMesh {
     glm::vec4 mBaseColor = glm::vec4(1.0f);
 
     OGLMesh mMesh{};
-    std::unordered_map<std::string, std::shared_ptr<Texture>> mTextures{};
     std::vector<std::shared_ptr<AssimpBone>> mBoneList{};
 };

@@ -14,6 +14,7 @@
 #include "AssimpNode.hpp"
 #include "AssimpAnimClip.hpp"
 #include "OpenGL/VertexIndexBuffer.hpp"
+#include "OpenGL/ShaderStorageBuffer.hpp"
 
 #include "OpenGL/OGLRenderData.hpp"
 
@@ -36,34 +37,34 @@ class AssimpModel {
     const std::unordered_map<std::string, std::shared_ptr<AssimpNode>>& getNodeMap();
 
     const std::vector<std::shared_ptr<AssimpBone>>& getBoneList();
-    const std::unordered_map<std::string, glm::mat4>& getBoneOffsetMatrices();
 
-    const std::shared_ptr<AssimpNode> getRootNode();
+    void bindBoneMatrixOffsetBuffer(int bindingPoint);
+    void bindBoneParentBuffer(int bindingPoint);
 
     void cleanup();
-
 private:
     void processNode(std::shared_ptr<AssimpNode> node, aiNode* aNode, const aiScene* scene, std::string assetDirectory);
     void createNodeList(std::shared_ptr<AssimpNode> node, std::shared_ptr<AssimpNode> newNode, std::vector<std::shared_ptr<AssimpNode>> &list);
 
     unsigned int mTriangleCount = 0;
     unsigned int mVertexCount = 0;
-    bool mModelUsesBPRColors = false;
 
     /* store the root node for direct access */
     std::shared_ptr<AssimpNode> mRootNode = nullptr;
     /* a map to find the node by name */
-    std::unordered_map<std::string, std::shared_ptr<AssimpNode>> mNodeMap{};
+    std::unordered_map  <std::string, std::shared_ptr<AssimpNode>> mNodeMap{};
     /* and a 'flat' map to keep the order of insertation  */
     std::vector<std::shared_ptr<AssimpNode>> mNodeList{};
 
     std::vector<std::shared_ptr<AssimpBone>> mBoneList{};
-    std::unordered_map<std::string, glm::mat4> mBoneOffsetMatrices{};
 
     std::vector<std::shared_ptr<AssimpAnimClip>> mAnimClips{};
 
     std::vector<OGLMesh> mModelMeshes{};
     std::vector<VertexIndexBuffer> mVertexBuffers{};
+
+    ShaderStorageBuffer mShaderBoneParentBuffer{};
+    ShaderStorageBuffer mShaderBoneMatrixOffsetBuffer{};
 
     // map textures to external or internal texture names
     std::unordered_map<std::string, std::shared_ptr<Texture>> mTextures{};
@@ -75,3 +76,4 @@ private:
     std::string mModelFilenamePath;
     std::string mModelFilename;
 };
+
